@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Actor {
+  id        String   @id @default(cuid())
+  name      String
+  tmdbId    Int?     @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  characterPortrayals CharacterPortrayal[]
+
+  @@map("actors")
+}
+
+model Character {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  portrayals CharacterPortrayal[]
+  quoteLines QuoteLine[]
+
+  @@map("characters")
+}
+
+model CharacterPortrayal {
+  id          String  @id @default(cuid())
+  characterId String
+  actorId     String
+  movieId     String?
+  tvShowId    String?
+  seasonId    String?
+  episodeId   String?
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  actor     Actor     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  movie     Movie?    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  tvShow    TvShow?   @relation(fields: [tvShowId], references: [id], onDelete: Cascade)
+  season    Season?   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  episode   Episode?  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, actorId, movieId])
+  @@unique([characterId, actorId, tvShowId, seasonId, episodeId])
+  @@map("character_portrayals")
+}
+
+model Movie {
+  id          String   @id @default(cuid())
+  title       String
+  releaseYear Int?
+  tmdbId      Int?     @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  quotes              Quote[]
+  characterPortrayals CharacterPortrayal[]
+
+  @@map("movies")
+}
+
+model TvShow {
+  id        String   @id @default(cuid())
+  title     String
+  startYear Int?
+  endYear   Int?
+  tmdbId    Int?     @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  seasons             Season[]
+  characterPortrayals CharacterPortrayal[]
+
+  @@map("tv_shows")
+}
+
+model Season {
+  id         String   @id @default(cuid())
+  tvShowId   String
+  number     Int
+  title      String?
+  tmdbId     Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tvShow              TvShow               @relation(fields: [tvShowId], references: [id], onDelete: Cascade)
+  episodes            Episode[]
+  characterPortrayals CharacterPortrayal[]
+
+  @@unique([tvShowId, number])
+  @@map("seasons")
+}
+
+model Episode {
+  id        String   @id @default(cuid())
+  seasonId  String
+  number    Int
+  title     String?
+  tmdbId    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season              Season               @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  quotes              Quote[]
+  characterPortrayals CharacterPortrayal[]
+
+  @@unique([seasonId, number])
+  @@map("episodes")
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  title     String?
+  movieId   String?
+  episodeId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movie   Movie?      @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  episode Episode?    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  lines   QuoteLine[]
+
+  @@map("quotes")
+}
+
+enum LineType {
+  DIALOGUE
+  STAGE_DIRECTION
+  NARRATION
+}
+
+model QuoteLine {
+  id           String    @id @default(cuid())
+  quoteId      String
+  characterId  String?
+  content      String
+  lineType     LineType  @default(DIALOGUE)
+  orderIndex   Int
+  startTime    Float?    // in seconds
+  endTime      Float?    // in seconds
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  quote     Quote      @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  @@unique([quoteId, orderIndex])
+  @@map("quote_lines")
+}

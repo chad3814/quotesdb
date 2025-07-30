@@ -1,0 +1,149 @@
+name: PR Environment with Custom DB Branching
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_target:
+    types: [closed]
+
+jobs:
+  create-pr-environment:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup Branch Manager
+      run: |
+        # Install the published package
+        npm install -g @chad3814/postgres-branch-manager
+    
+    - name: Create PR Database Branch
+      run: |
+        PR_NUMBER=${{ github.event.number }}
+        BRANCH_NAME="pr_${PR_NUMBER}"
+        
+        echo "Creating database branch for PR #${PR_NUMBER}..."
+        
+        # Use the branch-manager CLI
+        pg-branch create ${BRANCH_NAME} \
+          --source quotesdb_production \
+          --url "${{ secrets.PRODUCTION_DATABASE_URL }}" \
+          --prefix "quotesdb_" \
+          --verbose
+        
+        # Get the connection URL
+        BRANCH_URL=$(pg-branch exists ${BRANCH_NAME} --url "${{ secrets.PRODUCTION_DATABASE_URL }}" --prefix "quotesdb_" | grep "Connection URL:" | cut -d' ' -f3)
+        echo "PR_DATABASE_URL=${BRANCH_URL}" >> $GITHUB_ENV
+        
+        echo "✅ Branch created: ${BRANCH_NAME}"
+        echo "🔗 Connection URL: ${BRANCH_URL}"
+    
+    - name: Run database migrations on PR database
+      run: npx prisma migrate deploy
+      env:
+        DATABASE_URL: ${{ env.PR_DATABASE_URL }}
+    
+    - name: Build application
+      run: npm run build
+      env:
+        DATABASE_URL: ${{ env.PR_DATABASE_URL }}
+        TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        NEXTAUTH_SECRET: ${{ secrets.STAGING_NEXTAUTH_SECRET }}
+        NEXTAUTH_URL: https://quotesdb-pr-${{ github.event.number }}.vercel.app
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository }}:pr-${{ github.event.number }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Deploy PR environment
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Clone the config repo
+        git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/${{ github.repository_owner }}/quotesdb-config.git config-repo
+        cd config-repo
+        
+        # Create PR environment config
+        mkdir -p pr-environments/pr-${{ github.event.number }}
+        cp -r staging/* pr-environments/pr-${{ github.event.number }}/
+        
+        # Update with PR-specific values
+        yq eval '.spec.template.spec.containers[0].image = "ghcr.io/${{ github.repository }}:pr-${{ github.event.number }}"' -i pr-environments/pr-${{ github.event.number }}/deployment.yaml
+        yq eval '.metadata.name = "quotesdb-pr-${{ github.event.number }}"' -i pr-environments/pr-${{ github.event.number }}/deployment.yaml
+        
+        # Commit and push
+        git add .
+        git commit -m "Create PR environment for #${{ github.event.number }}"
+        git push
+    
+    - name: Comment PR with environment URL
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚀 PR environment deployed!\n\n🔗 **URL**: https://quotesdb-pr-${{ github.event.number }}.your-domain.com\n📊 **Database**: quotesdb-pr-${{ github.event.number }}'
+          })
+
+  cleanup-pr-environment:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Cleanup PR environment
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        
+        # Clone the config repo
+        git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/${{ github.repository_owner }}/quotesdb-config.git config-repo
+        cd config-repo
+        
+        # Remove PR environment config
+        rm -rf pr-environments/pr-${{ github.event.number }}
+        
+        # Commit and push
+        git add .
+        git commit -m "Cleanup PR environment for #${{ github.event.number }}" || exit 0
+        git push || exit 0
+    
+    - name: Setup Branch Manager for Cleanup
+      run: |
+        # Install the published package
+        npm install -g @chad3814/postgres-branch-manager
+    
+    - name: Cleanup PR Database Branch
+      run: |
+        PR_NUMBER=${{ github.event.number }}
+        BRANCH_NAME="pr_${PR_NUMBER}"
+        
+        echo "Cleaning up database branch for PR #${PR_NUMBER}..."
+        
+        # Use the branch-manager CLI for cleanup
+        pg-branch delete ${BRANCH_NAME} \
+          --url "${{ secrets.PRODUCTION_DATABASE_URL }}" \
+          --prefix "quotesdb_" \
+          --force \
+          --verbose || echo "Branch may not exist or already deleted"
+        
+        echo "🗑️ Cleanup completed for: ${BRANCH_NAME}"
