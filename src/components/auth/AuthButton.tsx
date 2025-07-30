@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useSession } from "next-auth/react"
 import SignInButton from "./SignInButton"
 import SignOutButton from "./SignOutButton"
@@ -26,6 +27,12 @@ export default function AuthButton({ className }: AuthButtonProps) {
         <span className="text-sm text-gray-700">
           Welcome, {session.user.displayName || session.user.name || "User"}!
         </span>
+        <Link
+          href="/settings"
+          className="text-sm text-gray-600 hover:text-gray-900"
+        >
+          Settings
+        </Link>
         <SignOutButton className={className} />
       </div>
     )
