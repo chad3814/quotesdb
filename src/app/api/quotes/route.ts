@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "@/lib/auth-utils"
-import { db } from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // For now, create a simple quote structure
     // In a full implementation, this would involve creating movies, characters, etc.
-    const quote = await db.quote.create({
+    const quote = await prisma.quote.create({
       data: {
         title: title?.trim() || null,
         createdBy: session.user.id,
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const quotes = await db.quote.findMany({
+    const quotes = await prisma.quote.findMany({
       include: {
         lines: {
           orderBy: {

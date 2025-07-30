@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export async function getServerSession() {
   return await auth()
@@ -7,7 +7,7 @@ export async function getServerSession() {
 
 export async function createUserProfile(userId: string, displayName: string) {
   try {
-    const updatedUser = await db.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { displayName },
     })
@@ -31,7 +31,7 @@ export async function validateDisplayName(displayName: string) {
 
 export async function checkDisplayNameUnique(displayName: string, currentUserId?: string) {
   try {
-    const existingUser = await db.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { displayName },
     })
     
@@ -47,7 +47,7 @@ export async function checkDisplayNameUnique(displayName: string, currentUserId?
 
 export async function getUserByEmail(email: string) {
   try {
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
       include: {
         accounts: true,
@@ -61,7 +61,7 @@ export async function getUserByEmail(email: string) {
 
 export async function getUserById(id: string) {
   try {
-    const user = await db.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       include: {
         accounts: {
@@ -90,7 +90,7 @@ export async function updateUserDisplayName(userId: string, displayName: string)
       return { success: false, error: uniqueCheck.error }
     }
     
-    const updatedUser = await db.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { displayName },
     })

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "@/lib/auth-utils"
-import { db } from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has multiple accounts
-    const userAccounts = await db.account.findMany({
+    const userAccounts = await prisma.account.findMany({
       where: { userId: session.user.id },
     })
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete the account
-    await db.account.delete({
+    await prisma.account.delete({
       where: { id: accountToUnlink.id },
     })
 
