@@ -1,0 +1,65 @@
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { auth } from "@/lib/auth"
+
+// Define protected routes
+const protectedRoutes = [
+  "/quotes/new",
+  "/settings",
+]
+
+// Define public routes that should always be accessible
+const publicRoutes = [
+  "/",
+  "/quotes",
+  "/auth",
+  "/api/auth",
+]
+
+export default auth((req) => {
+  const { pathname } = req.nextUrl
+  const isLoggedIn = !!req.auth
+
+  // Check if route is protected
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  )
+
+  // Check if route is public
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname.startsWith(route)
+  )
+
+  // Allow public routes
+  if (isPublicRoute && !isProtectedRoute) {
+    return NextResponse.next()
+  }
+
+  // Redirect to sign-in for protected routes when not authenticated
+  if (isProtectedRoute && !isLoggedIn) {
+    const signInUrl = new URL("/auth/signin", req.nextUrl.origin)
+    signInUrl.searchParams.set("callbackUrl", pathname)
+    return NextResponse.redirect(signInUrl)
+  }
+
+  // Allow authenticated users to access protected routes
+  if (isProtectedRoute && isLoggedIn) {
+    return NextResponse.next()
+  }
+
+  // Default: allow the request
+  return NextResponse.next()
+})
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+}
