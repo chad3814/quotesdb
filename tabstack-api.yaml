@@ -1,0 +1,633 @@
+openapi: 3.0.3
+info:
+  title: tabs-api
+  description: API for converting web pages to markdown, schema, and structured JSON
+  version: "1.0"
+servers:
+  - url: "https://api.tabstack.ai/"
+    description: Production server
+  - url: "http://localhost:8080/"
+    description: Development server
+paths:
+  /docs:
+    get:
+      summary: API Documentation
+      description: Serves the Swagger UI documentation
+      operationId: getDocs
+      tags:
+        - documentation
+      security: []
+      responses:
+        "200":
+          description: HTML documentation page
+          content:
+            text/html:
+              schema:
+                type: string
+  /openapi.yaml:
+    get:
+      summary: OpenAPI Specification
+      description: Serves the OpenAPI specification file
+      operationId: getOpenAPISpec
+      tags:
+        - documentation
+      security: []
+      responses:
+        "200":
+          description: OpenAPI specification
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /fetch:
+    get:
+      summary: Fetch content from a URL
+      description: Fetches and returns the raw content from a specified URL
+      operationId: fetchContent
+      tags:
+        - fetch
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: URL to fetch content from
+          schema:
+            type: string
+            format: uri
+            example: https://example.com
+      responses:
+        "200":
+          description: Successfully fetched content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: The URL that was fetched
+                  statusCode:
+                    type: integer
+                    description: HTTP status code of the response
+                  body:
+                    type: string
+                    description: The response body content
+                  headers:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Response headers
+                required:
+                  - url
+                  - statusCode
+                  - body
+                  - headers
+        "401":
+          description: Unauthorized - Invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized - Invalid token"
+        "400":
+          description: Bad request - URL is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "422":
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /markdown:
+    get:
+      summary: Convert URL content to Markdown
+      description: Fetches a URL and converts its content to Markdown format
+      operationId: convertToMarkdown
+      tags:
+        - markdown
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: URL to fetch and convert to markdown
+          schema:
+            type: string
+            format: uri
+            example: https://example.com
+      responses:
+        "200":
+          description: Successfully converted content to markdown
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - url
+                  - content
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: The URL that was converted to markdown
+                  content:
+                    type: string
+                    description: The markdown content
+                example:
+                  url: "https://example.com"
+                  content: "# Example\n\nThis is markdown content"
+        "401":
+          description: Unauthorized - Invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized - Invalid token"
+        "400":
+          description: Bad request - URL is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "422":
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /schema:
+    get:
+      summary: Extract schema from URL content
+      description: Fetches a URL and generates a schema representation of its content
+      operationId: extractSchema
+      tags:
+        - schema
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: URL to fetch and extract schema from
+          schema:
+            type: string
+            format: uri
+            example: https://example.com
+        - name: instructions
+          in: query
+          required: false
+          description: Optional instructions to guide schema generation (max 1000 characters)
+          schema:
+            type: string
+            maxLength: 1000
+            example: "only return news articles, for each article include only the title and the author"
+      responses:
+        "200":
+          description: JSON schema
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: The title of the page
+                    content:
+                      type: string
+                      description: The content of the page
+                  required:
+                    - title
+                    - content
+                  additionalProperties: false
+        "401":
+          description: Unauthorized - Invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized - Invalid token"
+        "400":
+          description: Bad request - URL is required
+          content:
+            text/plain:
+              schema:
+                type: string
+        "422":
+          description: Invalid URL
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Server error
+          content:
+            text/plain:
+              schema:
+                type: string
+  /json:
+    post:
+      summary: Generate structured JSON from URL content
+      description: Fetches a URL and converts its content to structured JSON based on a provided schema
+      operationId: generateJson
+      tags:
+        - json
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - json_schema
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to fetch content from
+                  example: https://example.com
+                json_schema:
+                  type: object
+                  description: JSON schema definition to structure the extracted content. Must be a valid JavaScript object.
+                  example:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                        description: The title of the page
+                      content:
+                        type: string
+                        description: The content of the page
+                    required:
+                      - title
+                      - content
+                    additionalProperties: false
+      responses:
+        "200":
+          description: Successfully generated JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The generated JSON object matching the provided schema
+                additionalProperties: true
+        "401":
+          description: Unauthorized - Invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized - Invalid token"
+        "400":
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUrl:
+                  value:
+                    error: "url is required"
+                missingSchema:
+                  value:
+                    error: "json schema is required"
+                invalidSchema:
+                  value:
+                    error: "json schema must be a valid object"
+                invalidJson:
+                  value:
+                    error: "invalid JSON request body"
+        "422":
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "url is invalid"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "failed to fetch URL"
+  /transform:
+    post:
+      summary: Transform structured data from URL content
+      description: Fetches a URL, extracts data according to a schema, and transforms it based on provided instructions
+      operationId: transformData
+      tags:
+        - transform
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - json_schema
+                - instructions
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to fetch content from
+                  example: https://company.com/team
+                json_schema:
+                  type: object
+                  description: JSON schema definition to structure the transformed output. Must be a valid JavaScript object.
+                  example:
+                    type: object
+                    properties:
+                      personalized_emails:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: Contact's name
+                            email:
+                              type: string
+                              description: Contact's email address
+                            introduction:
+                              type: string
+                              description: Personalized introduction text
+                          required:
+                            - name
+                            - email
+                            - introduction
+                    required:
+                      - personalized_emails
+                    additionalProperties: false
+                instructions:
+                  type: string
+                  description: Instructions for how to transform the extracted data
+                  example: "Generate personalized email introductions for each contact based on their bio information"
+                nocache:
+                  type: boolean
+                  description: Optional flag to bypass cache and force fresh data retrieval
+                  default: false
+                  example: false
+      responses:
+        "200":
+          description: Successfully transformed data
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The transformed JSON object matching the provided schema
+                additionalProperties: true
+                example:
+                  personalized_emails:
+                    - name: "John Doe"
+                      email: "john@company.com"
+                      introduction: "Hi John, I noticed your expertise in software architecture and would love to discuss our new platform..."
+                    - name: "Jane Smith"
+                      email: "jane@company.com"
+                      introduction: "Hi Jane, your background in UX design is impressive and aligns perfectly with our current project..."
+        "401":
+          description: Unauthorized - Invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized - Invalid token"
+        "400":
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUrl:
+                  value:
+                    error: "url is required"
+                missingSchema:
+                  value:
+                    error: "json schema is required"
+                missingInstructions:
+                  value:
+                    error: "instructions are required"
+                invalidSchema:
+                  value:
+                    error: "json schema must be a valid object"
+                invalidJson:
+                  value:
+                    error: "invalid JSON request body"
+        "405":
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "method not allowed"
+        "422":
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "url is invalid"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                fetchError:
+                  value:
+                    error: "failed to fetch URL"
+                transformError:
+                  value:
+                    error: "failed to transform data"
+                contentTooLarge:
+                  value:
+                    error: "web page is too large"
+  /spark:
+    post:
+      summary: Execute tasks using Spark AI
+      description: |
+        Executes AI-powered tasks using the Spark server. Supports both streaming and non-streaming responses based on the Accept header.
+        
+        **Streaming vs Non-streaming:**
+        - Use `Accept: text/event-stream` for real-time streaming responses (Server-Sent Events)
+        - Use `Accept: application/json` for traditional JSON responses
+        
+        **Streaming Benefits:**
+        - Real-time results as they're generated
+        - Automatic keep-alive messages every 30 seconds to prevent timeouts
+        - Reduced memory usage for large responses
+        
+        **Use Cases:**
+        - Content analysis and summarization
+        - Data extraction and transformation
+        - AI-powered content generation
+      operationId: executeSpark
+      tags:
+        - spark
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task
+              properties:
+                task:
+                  type: string
+                  description: The task to execute
+                  example: "summarize"
+                url:
+                  type: string
+                  format: uri
+                  description: Optional URL to process
+                  example: "https://example.com"
+                data:
+                  type: object
+                  description: Optional data payload for the task
+                  additionalProperties: true
+                  example: {"key": "value"}
+                guardrails:
+                  type: string
+                  description: Optional guardrails or constraints for the task
+                  example: "Keep response under 500 words"
+            examples:
+              basicSummary:
+                summary: Basic URL summarization
+                value:
+                  task: "summarize"
+                  url: "https://example.com"
+              dataAnalysis:
+                summary: Data analysis with custom data
+                value:
+                  task: "analyze"
+                  data: {"metrics": [1, 2, 3, 4, 5]}
+                  guardrails: "Focus on trends and patterns"
+      responses:
+        "200":
+          description: Task executed successfully
+          content:
+            application/json:
+              description: Standard JSON response (when Accept header is application/json)
+              schema:
+                type: object
+                additionalProperties: true
+                description: Response varies based on the task executed
+              example:
+                result: "Task completed successfully"
+                data: "Response content here"
+            text/event-stream:
+              description: |
+                Streaming response using Server-Sent Events (when Accept header is text/event-stream).
+                
+                **Event Format:**
+                - Each event starts with `data: ` followed by JSON
+                - Empty lines separate events
+                - Keep-alive comments (`:keepalive`) sent every 30 seconds
+                
+                **Keep-alive messages:** Empty `:keepalive` comments are sent every 30 seconds during long-running tasks to prevent connection timeouts.
+              schema:
+                type: string
+                format: binary
+                description: Server-Sent Events stream with JSON data events
+              example: |
+                data: {"status": "starting", "task": "summarize"}
+                
+                data: {"progress": 25, "message": "Fetching content..."}
+                
+                data: {"progress": 50, "message": "Processing..."}
+                
+                :keepalive
+                
+                data: {"result": "complete", "summary": "Content summary here..."}
+        "400":
+          description: Bad request - Invalid task or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingTask:
+                  value:
+                    error: "task is required"
+                invalidRequest:
+                  value:
+                    error: "invalid JSON body"
+        "401":
+          description: Unauthorized - Invalid or missing Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized - Invalid token"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "failed to call spark server"
+        "503":
+          description: Service unavailable - Spark service not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "spark service not available"
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token for API authentication
