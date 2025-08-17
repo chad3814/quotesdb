@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Profile setup required" }, { status: 400 })
     }
 
-    const { title, content, character, movieTitle } = await request.json()
+    const { content, character, movieTitle } = await request.json()
 
     if (!content || typeof content !== "string" || content.trim().length === 0) {
       return NextResponse.json({ error: "Quote content is required" }, { status: 400 })
@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
     // In a full implementation, this would involve creating movies, characters, etc.
     const quote = await prisma.quote.create({
       data: {
-        title: title?.trim() || null,
         createdBy: session.user.id,
         lines: {
           create: {

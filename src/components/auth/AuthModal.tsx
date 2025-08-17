@@ -20,70 +20,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     setError(null)
 
     try {
-      // Try popup first
-      const popup = window.open(
-        `/api/auth/signin/${provider}`,
-        "auth-popup",
-        "width=500,height=600,scrollbars=yes,resizable=yes"
-      )
-
-      if (popup) {
-        // Popup opened successfully
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed)
-            setLoading(null)
-            // Check if authentication was successful
-            window.location.reload()
-          }
-        }, 1000)
-
-        // Fallback timeout
-        setTimeout(() => {
-          if (!popup.closed) {
-            popup.close()
-            clearInterval(checkClosed)
-            handleFallbackSignIn(provider)
-          }
-        }, 30000)
-      } else {
-        // Popup blocked, try new tab
-        handleFallbackSignIn(provider)
-      }
-    } catch (error) {
-      console.error("Authentication error:", error)
-      setError("Unable to complete sign-in. Please check your connection and try again.")
-      setLoading(null)
-    }
-  }
-
-  const handleFallbackSignIn = async (provider: string) => {
-    try {
-      // Try opening in new tab
-      const newTab = window.open(`/api/auth/signin/${provider}`, "_blank")
-      
-      if (!newTab) {
-        // New tab blocked, use current window
-        await signIn(provider, { 
-          callbackUrl: window.location.href,
-          redirect: true 
-        })
-      } else {
-        // Monitor new tab
-        const checkClosed = setInterval(() => {
-          if (newTab.closed) {
-            clearInterval(checkClosed)
-            setLoading(null)
-            window.location.reload()
-          }
-        }, 1000)
-      }
-    } catch (error) {
-      // Final fallback to current window
+      // Use NextAuth's signIn function directly
       await signIn(provider, { 
         callbackUrl: window.location.href,
         redirect: true 
       })
+    } catch (error) {
+      console.error("Authentication error:", error)
+      setError("Unable to complete sign-in. Please check your connection and try again.")
+      setLoading(null)
     }
   }
 

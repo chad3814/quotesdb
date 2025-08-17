@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import AuthModal from "./AuthModal"
 import DisplayNameModal from "./DisplayNameModal"
@@ -14,6 +14,17 @@ export default function SignInButton({ className = "", children }: SignInButtonP
   const { data: session, status } = useSession()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false)
+  const [justAuthenticated, setJustAuthenticated] = useState(false)
+
+  // Check if user needs to set up display name after authentication
+  useEffect(() => {
+    if (justAuthenticated && status === "authenticated" && session?.user) {
+      if (!session.user.displayName) {
+        setShowDisplayNameModal(true)
+      }
+      setJustAuthenticated(false)
+    }
+  }, [justAuthenticated, status, session])
 
   // Don't render if already signed in
   if (status === "authenticated") {
@@ -26,10 +37,8 @@ export default function SignInButton({ className = "", children }: SignInButtonP
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false)
-    // Check if user needs to set up display name
-    if (session?.user && !session.user.displayName) {
-      setShowDisplayNameModal(true)
-    }
+    // Mark that we just authenticated to trigger the useEffect
+    setJustAuthenticated(true)
   }
 
   const handleDisplayNameComplete = () => {

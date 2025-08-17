@@ -7,6 +7,7 @@ import { prisma } from "./db"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -36,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Add user ID and displayName to session
       if (session.user && user) {
         session.user.id = user.id
-        session.user.displayName = (user as any).displayName
+        session.user.displayName = (user as { displayName?: string | null }).displayName
       }
       return session
     },

@@ -118,7 +118,6 @@ model Episode {
 
 model Quote {
   id        String   @id @default(cuid())
-  title     String?
   movieId   String?
   episodeId String?
   createdBy String?

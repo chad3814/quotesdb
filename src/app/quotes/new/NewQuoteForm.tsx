@@ -12,7 +12,6 @@ export default function NewQuoteForm({ userId }: NewQuoteFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    title: "",
     content: "",
     character: "",
     movieTitle: "",
@@ -65,22 +64,6 @@ export default function NewQuoteForm({ userId }: NewQuoteFormProps) {
           {error}
         </div>
       )}
-
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-          Quote Title (Optional)
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleInputChange}
-          placeholder="e.g., May the Force be with you"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          disabled={loading}
-        />
-      </div>
 
       <div>
         <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
