@@ -75,11 +75,11 @@ class ExampleRunner {
     }
   }
 
-  private async processJob(job: any) {
+  private async processJob(job: { id: string; type: string; arguments: unknown }) {
     try {
       logger.info('Processing job', { jobId: job.id, type: job.type })
 
-      let result: any
+      let result: Record<string, unknown> | undefined
       let success = true
       let error: string | undefined
 
@@ -110,7 +110,7 @@ class ExampleRunner {
     }
   }
 
-  private async processTmdbSync(args: any): Promise<any> {
+  private async processTmdbSync(args: unknown): Promise<Record<string, unknown>> {
     logger.info('Processing TMDB sync', { args })
     
     // Simulate TMDB API call and processing
@@ -128,7 +128,7 @@ class ExampleRunner {
     }
   }
 
-  private async processBatchQuotes(args: any): Promise<any> {
+  private async processBatchQuotes(args: unknown): Promise<Record<string, unknown>> {
     logger.info('Processing batch quotes', { args })
     
     // Simulate quote processing
@@ -158,7 +158,7 @@ class ExampleRunner {
   private async reportCompletion(
     jobId: string, 
     success: boolean, 
-    result?: any, 
+    result?: Record<string, unknown>, 
     error?: string
   ) {
     try {

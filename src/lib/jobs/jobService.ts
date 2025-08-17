@@ -6,13 +6,12 @@ import {
   logJobCompleted, 
   logJobFailed, 
   logJobRetry,
-  logJobCancelled,
-  logger 
+  logJobCancelled
 } from '@/lib/logger'
 
 type CreateJobInput = {
   type: JobType
-  arguments: any
+  arguments: Prisma.InputJsonValue
   timeoutMs?: number
 }
 
@@ -90,7 +89,7 @@ export async function completeJob(
   jobId: string,
   runnerId: string,
   success: boolean,
-  result?: any,
+  result?: Prisma.InputJsonValue,
   error?: string
 ) {
   const job = await prisma.job.findUnique({
