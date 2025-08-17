@@ -220,3 +220,29 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
+
+enum JobType {
+  TMDB_SYNC
+  BATCH_QUOTE_PROCESS
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  type         JobType
+  arguments    Json
+  runnerId     String?
+  attemptCount Int       @default(0)
+  timeoutMs    Int
+  result       Json?
+  error        String?
+  createdAt    DateTime  @default(now())
+  claimedAt    DateTime?
+  completedAt  DateTime?
+  nextRetryAt  DateTime?
+
+  @@index([createdAt])
+  @@index([claimedAt])
+  @@index([nextRetryAt])
+  @@index([completedAt])
+  @@map("jobs")
+}
