@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { logger, logJobTimeout, logJobRetry, logJobFailed } from '@/lib/logger'
 
 export class TimeoutMonitor {
   private intervalId: NodeJS.Timeout | null = null
@@ -7,29 +8,29 @@ export class TimeoutMonitor {
 
   async start() {
     if (this.isRunning) {
-      console.log('Timeout monitor is already running')
+      logger.info('Timeout monitor is already running')
       return
     }
 
     this.isRunning = true
-    console.log('Starting timeout monitor')
+    logger.info('Starting timeout monitor')
 
     this.intervalId = setInterval(async () => {
       try {
         await this.checkTimeouts()
       } catch (error) {
-        console.error('Error in timeout monitor:', error)
+        logger.error('Error in timeout monitor:', error)
       }
     }, this.checkInterval)
   }
 
   async stop() {
     if (!this.isRunning) {
-      console.log('Timeout monitor is not running')
+      logger.info('Timeout monitor is not running')
       return
     }
 
-    console.log('Stopping timeout monitor')
+    logger.info('Stopping timeout monitor')
     this.isRunning = false
 
     if (this.intervalId) {
@@ -54,7 +55,7 @@ export class TimeoutMonitor {
       const timeoutThreshold = job.claimedAt.getTime() + (job.timeoutMs * 1.25)
       
       if (now.getTime() > timeoutThreshold) {
-        console.log(`Job ${job.id} has timed out`)
+        logJobTimeout(job.id, job.timeoutMs)
         
         try {
           const newAttemptCount = job.attemptCount + 1
@@ -75,7 +76,7 @@ export class TimeoutMonitor {
               },
             })
             
-            console.log(`Job ${job.id} will retry at ${nextRetryAt.toISOString()}`)
+            logJobRetry(job.id, newAttemptCount, nextRetryAt)
           } else {
             await prisma.job.update({
               where: { id: job.id },
@@ -85,10 +86,10 @@ export class TimeoutMonitor {
               },
             })
             
-            console.log(`Job ${job.id} permanently failed after ${job.attemptCount} attempts`)
+            logJobFailed(job.id, `Job timed out after ${job.attemptCount} attempts`, job.attemptCount)
           }
         } catch (error) {
-          console.error(`Failed to handle timeout for job ${job.id}:`, error)
+          logger.error(`Failed to handle timeout for job ${job.id}:`, error)
         }
       }
     }

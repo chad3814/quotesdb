@@ -1,5 +1,14 @@
 import { JobType, Prisma, PrismaClient } from '@prisma/client'
 import { prisma } from '@/lib/db'
+import { 
+  logJobCreated, 
+  logJobClaimed, 
+  logJobCompleted, 
+  logJobFailed, 
+  logJobRetry,
+  logJobCancelled,
+  logger 
+} from '@/lib/logger'
 
 type CreateJobInput = {
   type: JobType
@@ -15,13 +24,16 @@ const DEFAULT_TIMEOUTS: Record<JobType, number> = {
 export async function createJob({ type, arguments: args, timeoutMs }: CreateJobInput) {
   const timeout = timeoutMs ?? DEFAULT_TIMEOUTS[type]
   
-  return await prisma.job.create({
+  const job = await prisma.job.create({
     data: {
       type,
       arguments: args,
       timeoutMs: timeout,
     },
   })
+  
+  logJobCreated(job.id, type)
+  return job
 }
 
 export async function getJob(id: string) {
@@ -53,13 +65,16 @@ export async function claimJob(runnerId: string, types?: JobType[]) {
       return null
     }
     
-    return await tx.job.update({
+    const claimedJob = await tx.job.update({
       where: { id: job.id },
       data: {
         claimedAt: now,
         runnerId,
       },
     })
+    
+    logJobClaimed(claimedJob.id, runnerId)
+    return claimedJob
   })
 }
 
@@ -93,13 +108,15 @@ export async function completeJob(
   const now = new Date()
   
   if (success) {
-    return await prisma.job.update({
+    const completedJob = await prisma.job.update({
       where: { id: jobId },
       data: {
         completedAt: now,
         result,
       },
     })
+    logJobCompleted(jobId, runnerId, true)
+    return completedJob
   } else {
     const newAttemptCount = job.attemptCount + 1
     const shouldRetry = newAttemptCount < 10
@@ -108,7 +125,7 @@ export async function completeJob(
       const retryDelayMs = getRetryDelay(newAttemptCount)
       const nextRetryAt = new Date(now.getTime() + retryDelayMs)
       
-      return await prisma.job.update({
+      const retriedJob = await prisma.job.update({
         where: { id: jobId },
         data: {
           attemptCount: newAttemptCount,
@@ -118,14 +135,20 @@ export async function completeJob(
           error,
         },
       })
+      
+      logJobRetry(jobId, newAttemptCount, nextRetryAt)
+      return retriedJob
     } else {
-      return await prisma.job.update({
+      const failedJob = await prisma.job.update({
         where: { id: jobId },
         data: {
           completedAt: now,
           error,
         },
       })
+      
+      logJobFailed(jobId, error || 'Unknown error', job.attemptCount)
+      return failedJob
     }
   }
 }
@@ -143,11 +166,14 @@ export async function cancelJob(jobId: string) {
     throw new Error(`Job ${jobId} is already completed`)
   }
   
-  return await prisma.job.update({
+  const cancelledJob = await prisma.job.update({
     where: { id: jobId },
     data: {
       completedAt: new Date(),
       error: 'Job cancelled',
     },
   })
+  
+  logJobCancelled(jobId)
+  return cancelledJob
 }

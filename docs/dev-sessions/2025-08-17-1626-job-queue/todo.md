@@ -30,15 +30,15 @@
 - [x] Update job claiming to respect retry delays (already implemented in jobService)
 
 ## Phase 8: Logging
-- [ ] Add structured JSON logging throughout system
+- [x] Add structured JSON logging throughout system
 
 ## Phase 9: Example Runner
-- [ ] Create sample runner implementation
+- [x] Create sample runner implementation
 
 ## Phase 10: Testing & Documentation
-- [ ] Write unit tests for core logic
-- [ ] Write integration tests for complete flow
-- [ ] Add development scripts to package.json
+- [ ] Write unit tests for core logic (skipping for now)
+- [ ] Write integration tests for complete flow (skipping for now)
+- [x] Add development scripts to package.json
 
 ## Phase 11: Production Readiness
 - [ ] Create Dockerfile for coordinator

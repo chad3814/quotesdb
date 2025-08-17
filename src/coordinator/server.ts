@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { JobType } from '@prisma/client'
 import * as jobService from '@/lib/jobs/jobService'
 import { TimeoutMonitor } from './timeoutMonitor'
+import { logger } from '@/lib/logger'
 
 dotenv.config()
 
@@ -69,7 +70,7 @@ app.post('/jobs', async (req, res) => {
       created_at: job.createdAt
     })
   } catch (error) {
-    console.error('Error creating job:', error)
+    logger.error('Error creating job:', error)
     res.status(500).json({ error: 'Failed to create job' })
   }
 })
@@ -91,7 +92,7 @@ app.get('/jobs/:id', async (req, res) => {
       status
     })
   } catch (error) {
-    console.error('Error getting job:', error)
+    logger.error('Error getting job:', error)
     res.status(500).json({ error: 'Failed to get job' })
   }
 })
@@ -113,7 +114,7 @@ app.delete('/jobs/:id', async (req, res) => {
         return res.status(400).json({ error: error.message })
       }
     }
-    console.error('Error cancelling job:', error)
+    logger.error('Error cancelling job:', error)
     res.status(500).json({ error: 'Failed to cancel job' })
   }
 })
@@ -138,7 +139,7 @@ app.post('/jobs/claim', async (req, res) => {
     
     res.json(job)
   } catch (error) {
-    console.error('Error claiming job:', error)
+    logger.error('Error claiming job:', error)
     res.status(500).json({ error: 'Failed to claim job' })
   }
 })
@@ -173,13 +174,13 @@ app.post('/jobs/:id/complete', async (req, res) => {
         return res.status(403).json({ error: error.message })
       }
     }
-    console.error('Error completing job:', error)
+    logger.error('Error completing job:', error)
     res.status(500).json({ error: 'Failed to complete job' })
   }
 })
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err)
+  logger.error('Express error:', err)
   res.status(500).json({ 
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -187,15 +188,15 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 })
 
 const server = app.listen(PORT, async () => {
-  console.log(`Job Queue Coordinator running on port ${PORT}`)
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
+  logger.info(`Job Queue Coordinator running on port ${PORT}`)
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`)
   
   await timeoutMonitor.start()
   console.log('Timeout monitor started')
 })
 
 function gracefulShutdown(signal: string) {
-  console.log(`\n${signal} received, starting graceful shutdown...`)
+  logger.info(`\n${signal} received, starting graceful shutdown...`)
   isShuttingDown = true
 
   const shutdownTimeout = setTimeout(() => {
@@ -204,16 +205,16 @@ function gracefulShutdown(signal: string) {
   }, 30000)
 
   server.close(async () => {
-    console.log('HTTP server closed')
+    logger.info('HTTP server closed')
     
     await timeoutMonitor.stop()
-    console.log('Timeout monitor stopped')
+    logger.info('Timeout monitor stopped')
     
     try {
       await prisma.$disconnect()
-      console.log('Database connection closed')
+      logger.info('Database connection closed')
     } catch (error) {
-      console.error('Error closing database connection:', error)
+      logger.error('Error closing database connection:', error)
     }
     
     clearTimeout(shutdownTimeout)
