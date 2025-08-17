@@ -14,6 +14,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Accept build arguments
+ARG TMDB_API_KEY
+ENV TMDB_API_KEY=$TMDB_API_KEY
+
 # Generate Prisma client
 RUN npx prisma generate
 

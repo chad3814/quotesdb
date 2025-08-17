@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "@/lib/auth-utils"
 import { prisma } from "@/lib/db"
+import { LineType } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,24 +15,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Profile setup required" }, { status: 400 })
     }
 
-    const { content, character, movieTitle } = await request.json()
+    const { lines, movieId } = await request.json()
 
-    if (!content || typeof content !== "string" || content.trim().length === 0) {
-      return NextResponse.json({ error: "Quote content is required" }, { status: 400 })
+    // Validate lines
+    if (!lines || !Array.isArray(lines) || lines.length === 0) {
+      return NextResponse.json({ error: "At least one quote line is required" }, { status: 400 })
     }
 
-    // For now, create a simple quote structure
-    // In a full implementation, this would involve creating movies, characters, etc.
+    // Process and validate each line
+    const processedLines = lines
+      .map((line: { content?: unknown; lineType?: string; characterId?: string }, index: number) => {
+        if (!line.content || typeof line.content !== "string" || !line.content.trim()) {
+          return null
+        }
+        return {
+          content: line.content.trim(),
+          lineType: (line.lineType || "DIALOGUE") as LineType,
+          orderIndex: index,
+          characterId: line.characterId || null,
+        }
+      })
+      .filter((line): line is NonNullable<typeof line> => line !== null)
+
+    if (processedLines.length === 0) {
+      return NextResponse.json({ error: "At least one non-empty quote line is required" }, { status: 400 })
+    }
+
+    // Create quote with movie connection if provided
     const quote = await prisma.quote.create({
       data: {
         createdBy: session.user.id,
+        movieId: movieId || null,
         lines: {
-          create: {
-            content: content.trim(),
-            lineType: "DIALOGUE",
-            orderIndex: 0,
-            // Note: character relationship would be more complex in real implementation
-          },
+          create: processedLines,
         },
       },
       include: {
@@ -62,8 +78,21 @@ export async function GET() {
     const quotes = await prisma.quote.findMany({
       include: {
         lines: {
+          include: {
+            character: true,
+          },
           orderBy: {
             orderIndex: "asc",
+          },
+        },
+        movie: true,
+        episode: {
+          include: {
+            season: {
+              include: {
+                tvShow: true,
+              },
+            },
           },
         },
         creator: {

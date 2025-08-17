@@ -56,8 +56,10 @@ model CharacterPortrayal {
 model Movie {
   id          String   @id @default(cuid())
   title       String
+  overview    String?  @db.Text
   releaseYear Int?
   tmdbId      Int?     @unique
+  imdbId      String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

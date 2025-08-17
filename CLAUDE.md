@@ -45,9 +45,12 @@ Key relationships:
 - `src/app/` - Next.js App Router pages and API routes
 - `src/app/api/auth/` - Authentication endpoints and profile setup
 - `src/app/api/quotes/` - Quote management API
+- `src/app/api/movies/` - Movie management and TMDB import API
 - `src/app/api/user/` - User management endpoints
+- `src/app/movies/add/` - UI for importing movies from TMDB
 - `src/lib/db.ts` - Prisma client singleton with development hot-reloading
 - `src/lib/auth.ts` - NextAuth configuration
+- `src/lib/tmdb.ts` - TMDB API integration service
 - `prisma/schema.prisma` - Database schema definition
 
 ### Configuration
@@ -69,5 +72,11 @@ Key relationships:
 - OAuth providers require configuration in respective developer consoles
 - Callback URLs must match exactly: `/api/auth/callback/{provider}`
 - First-time users must set a unique display name (max 15 characters)
+
+**TMDB Integration**:
+- Import movies individually by TMDB ID or in bulk from TMDB lists
+- Movie data includes title, release year, and TMDB ID
+- Duplicate imports are prevented (checks by TMDB ID)
+- Access the import page at `/movies/add`
 
 **Deployment**: Supports GitOps workflow with staging and production environments, including PR-based temporary environments with database branching

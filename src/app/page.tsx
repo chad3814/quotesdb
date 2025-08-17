@@ -14,10 +14,16 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <Link 
+                href="/movies" 
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Movies
+              </Link>
+              <Link 
                 href="/quotes" 
                 className="text-gray-600 hover:text-gray-900"
               >
-                Browse Quotes
+                Quotes
               </Link>
               <Link 
                 href="/quotes/new" 
@@ -50,10 +56,10 @@ export default function Home() {
             </div>
             <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
               <Link
-                href="/quotes/new"
+                href="/movies/add"
                 className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
               >
-                Add Quote
+                Import Movies
               </Link>
             </div>
           </div>
