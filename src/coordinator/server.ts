@@ -13,15 +13,23 @@ const app = express()
 const PORT = process.env.COORDINATOR_PORT || 3001
 const timeoutMonitor = new TimeoutMonitor()
 
+// Add request logging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  next()
+})
+
 app.use(cors())
 app.use(express.json())
 
 let isShuttingDown = false
 
 app.use((req, res, next) => {
+  console.log(`Got request: ${req.method} ${req.url}`)
   if (isShuttingDown) {
     res.status(503).json({ error: 'Server is shutting down' })
   } else {
+    logger.debug(`Got req: ${req.method} ${req.url}`)
     next()
   }
 })
@@ -187,12 +195,15 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
   })
 })
 
-const server = app.listen(PORT, async () => {
+const server = app.listen(Number(PORT), '0.0.0.0', () => {
   logger.info(`Job Queue Coordinator running on port ${PORT}`)
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`)
   
-  await timeoutMonitor.start()
-  console.log('Timeout monitor started')
+  timeoutMonitor.start().then(() => {
+    logger.info('Timeout monitor started')
+  }).catch((error) => {
+    logger.error('Failed to start timeout monitor:', error)
+  })
 })
 
 function gracefulShutdown(signal: string) {

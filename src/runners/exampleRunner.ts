@@ -48,6 +48,7 @@ class ExampleRunner {
   }
 
   private async pollForJob() {
+    logger.info('Polling for a job')
     try {
       const response = await fetch(`${COORDINATOR_URL}/jobs/claim`, {
         method: 'POST',
@@ -59,10 +60,12 @@ class ExampleRunner {
       })
 
       if (response.status === 204) {
+        logger.info('No jobs available');
         return
       }
 
       if (!response.ok) {
+        logger.error(`failed to claim a job: ${response.statusText}`)
         throw new Error(`Failed to claim job: ${response.statusText}`)
       }
 
