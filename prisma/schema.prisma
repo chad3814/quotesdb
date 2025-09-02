@@ -11,6 +11,7 @@ model Actor {
   id        String   @id @default(cuid())
   name      String
   tmdbId    Int?     @unique
+  imdbId    String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -119,12 +120,13 @@ model Episode {
 }
 
 model Quote {
-  id        String   @id @default(cuid())
-  movieId   String?
-  episodeId String?
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  movieId      String?
+  episodeId    String?
+  imdbQuoteId  String?  @unique
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   movie     Movie?      @relation(fields: [movieId], references: [id], onDelete: Cascade)
   episode   Episode?    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
@@ -224,6 +226,7 @@ model VerificationToken {
 enum JobType {
   TMDB_SYNC
   BATCH_QUOTE_PROCESS
+  FETCH_IMDB_QUOTES
 }
 
 model Job {

@@ -16,7 +16,8 @@
     "coordinator:dev": "tsx watch src/coordinator/server.ts",
     "coordinator:build": "tsc src/coordinator/server.ts --outDir dist/coordinator",
     "coordinator:start": "node dist/coordinator/server.js",
-    "runner:example": "tsx src/runners/exampleRunner.ts"
+    "runner:example": "tsx src/runners/exampleRunner.ts",
+    "runner:imdb": "tsx src/runners/imdbQuoteRunner.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

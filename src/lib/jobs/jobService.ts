@@ -18,6 +18,7 @@ type CreateJobInput = {
 const DEFAULT_TIMEOUTS: Record<JobType, number> = {
   [JobType.TMDB_SYNC]: 30000, // 30 seconds
   [JobType.BATCH_QUOTE_PROCESS]: 60000, // 60 seconds
+  [JobType.FETCH_IMDB_QUOTES]: 45000, // 45 seconds
 }
 
 export async function createJob({ type, arguments: args, timeoutMs }: CreateJobInput) {

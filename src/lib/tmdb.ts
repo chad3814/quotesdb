@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db"
+import { JobType } from "@prisma/client"
+import * as jobService from "@/lib/jobs/jobService"
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
@@ -153,6 +155,23 @@ export async function addMovieFromTMDB(tmdbId: number) {
       imdbId: tmdbMovie.imdb_id || null
     }
   })
+
+  // Queue IMDb quote fetching job if movie has an IMDb ID
+  if (tmdbMovie.imdb_id) {
+    try {
+      await jobService.createJob({
+        type: JobType.FETCH_IMDB_QUOTES,
+        arguments: {
+          movieId: movie.id,
+          imdbId: tmdbMovie.imdb_id
+        }
+      })
+      console.log(`Queued IMDb quote fetch job for movie ${movie.id} (IMDb: ${tmdbMovie.imdb_id})`)
+    } catch (error) {
+      console.error('Failed to queue IMDb quote fetch job:', error)
+      // Don't throw - movie creation succeeded, job queue failure is non-critical
+    }
+  }
 
   // Fetch and add cast members
   let actorsAdded = 0
