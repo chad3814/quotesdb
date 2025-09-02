@@ -8,7 +8,7 @@ interface PlaywrightQuoteLine {
 }
 
 interface PlaywrightQuote {
-  id: string;
+  id: string | null;
   dialogueLines: PlaywrightQuoteLine[];
 }
 
@@ -70,7 +70,7 @@ export class IMDbPlaywrightClient {
 
       // Get the movie title
       const movieTitle = await this.page.evaluate(() => {
-        const titleElement = document.querySelector('h3[itemprop="name"] a');
+        const titleElement = document.querySelector('h2[data-testid="subtitle"]');
         return titleElement?.textContent?.trim() || 'Unknown Movie';
       });
 
@@ -112,10 +112,11 @@ export class IMDbPlaywrightClient {
 
       // Extract all quotes using the correct selector
       const quotes = await this.page.evaluate(() => {
-        const quoteElements = document.querySelectorAll('div[data-testid="item-id"] ul');
+        const quoteElements = document.querySelectorAll('div[data-testid="item-id"]');
         const quotesData: PlaywrightQuote[] = [];
 
         quoteElements.forEach((quoteEl, index) => {
+          const quoteId = quoteEl.previousElementSibling?.id || null;
           const lines: PlaywrightQuoteLine[] = [];
           
           // Find all list items (dialogue lines) within this quote
@@ -192,7 +193,7 @@ export class IMDbPlaywrightClient {
 
           if (lines.length > 0) {
             quotesData.push({
-              id: `imdb_quote_${index}`,
+              id: quoteId,
               dialogueLines: lines
             });
           }
