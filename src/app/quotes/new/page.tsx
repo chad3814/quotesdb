@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from "@/lib/auth-utils"
 import NewQuoteForm from "./NewQuoteForm"
-import Link from "next/link"
-import AuthButton from "@/components/auth/AuthButton"
+import PageLayout from "@/components/layout/PageLayout"
+import { Card } from "@/components/ui/Card"
 
 export default async function NewQuotePage() {
   const session = await getServerSession()
@@ -16,42 +16,21 @@ export default async function NewQuotePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-xl font-bold text-gray-900">
-                QuotesDB
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/quotes" 
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Browse Quotes
-              </Link>
-              <AuthButton />
-            </div>
-          </div>
+    <PageLayout maxWidth="content">
+      <div className="mb-8 text-center">
+        <div className="flex items-center justify-center mb-4">
+          <span className="text-5xl">✨</span>
         </div>
-      </nav>
+        <h1 className="heading-2 mb-3">Add New Quote</h1>
+        <p className="text-body-secondary max-w-2xl mx-auto">
+          Share a memorable quote from your favorite movie or TV show. 
+          Help others discover the magic of cinema through iconic dialogue.
+        </p>
+      </div>
 
-      <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Add New Quote</h1>
-            <p className="mt-2 text-gray-600">
-              Share a memorable quote from your favorite movie or TV show.
-            </p>
-          </div>
-
-          <div className="bg-white shadow rounded-lg">
-            <NewQuoteForm userId={session.user.id} />
-          </div>
-        </div>
-      </main>
-    </div>
+      <Card className="animate-scale-in">
+        <NewQuoteForm userId={session.user.id} />
+      </Card>
+    </PageLayout>
   )
 }

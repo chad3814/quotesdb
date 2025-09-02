@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { getServerSession } from "@/lib/auth-utils"
 import AddMoviesForm from "./AddMoviesForm"
-import Link from "next/link"
-import AuthButton from "@/components/auth/AuthButton"
+import PageLayout from "@/components/layout/PageLayout"
+import { Card, CardContent } from "@/components/ui/Card"
 
 export default async function AddMoviesPage() {
   const session = await getServerSession()
@@ -12,78 +12,58 @@ export default async function AddMoviesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-xl font-bold text-gray-900">
-                QuotesDB
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/quotes" 
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Browse Quotes
-              </Link>
-              <Link 
-                href="/quotes/new" 
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Add Quote
-              </Link>
-              <AuthButton />
-            </div>
-          </div>
+    <PageLayout maxWidth="content">
+      <div className="mb-8 text-center">
+        <div className="flex items-center justify-center mb-4">
+          <span className="text-5xl">🎆</span>
         </div>
-      </nav>
+        <h1 className="heading-2 mb-3">Import Movies</h1>
+        <p className="text-body-secondary max-w-2xl mx-auto">
+          Import movies from The Movie Database (TMDB) by individual ID or from curated lists. 
+          Build your collection with detailed cast information.
+        </p>
+      </div>
 
-      <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Add Movies from TMDB</h1>
-            <p className="mt-2 text-gray-600">
-              Import movies from The Movie Database (TMDB) by ID or from a list.
-            </p>
-          </div>
+      <Card className="animate-scale-in mb-8">
+        <AddMoviesForm />
+      </Card>
 
-          <div className="bg-white shadow rounded-lg">
-            <AddMoviesForm />
+      <Card variant="elevated" className="animate-slide-in">
+        <CardContent>
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">💡</div>
+            <div>
+              <h3 className="heading-5 mb-3">How to find TMDB IDs</h3>
+              <div className="space-y-3 text-sm text-text-secondary">
+                <div>
+                  <span className="font-semibold text-text-primary">Movie ID:</span> Visit a movie on{" "}
+                  <a 
+                    href="https://www.themoviedb.org" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary-600 hover:text-primary-700 underline transition-colors"
+                  >
+                    themoviedb.org
+                  </a>
+                  . The ID appears in the URL (e.g., /movie/<span className="font-mono bg-surface-100 px-1 rounded">550</span> for Fight Club)
+                </div>
+                <div>
+                  <span className="font-semibold text-text-primary">List ID:</span> Browse{" "}
+                  <a 
+                    href="https://www.themoviedb.org/lists" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary-600 hover:text-primary-700 underline transition-colors"
+                  >
+                    public lists
+                  </a>
+                  . The ID appears in the URL (e.g., /list/<span className="font-mono bg-surface-100 px-1 rounded">7060919</span>)
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className="mt-6 text-sm text-gray-600">
-            <p className="font-semibold mb-2">How to find TMDB IDs:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>
-                <strong>Movie ID:</strong> Go to a movie on{" "}
-                <a 
-                  href="https://www.themoviedb.org" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  themoviedb.org
-                </a>
-                . The ID is in the URL (e.g., /movie/<strong>550</strong> for Fight Club)
-              </li>
-              <li>
-                <strong>List ID:</strong> Browse{" "}
-                <a 
-                  href="https://www.themoviedb.org/lists" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  public lists
-                </a>
-                . The ID is in the URL (e.g., /list/<strong>7060919</strong>)
-              </li>
-            </ul>
-          </div>
-        </div>
-      </main>
-    </div>
+        </CardContent>
+      </Card>
+    </PageLayout>
   )
 }

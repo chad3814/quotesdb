@@ -1,81 +1,86 @@
 import Link from "next/link"
-import AuthButton from "@/components/auth/AuthButton"
+import PageLayout from "@/components/layout/PageLayout"
+import { Button } from "@/components/ui/Button"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-xl font-bold text-gray-900">
-                QuotesDB
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/movies" 
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Movies
-              </Link>
-              <Link 
-                href="/quotes" 
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Quotes
-              </Link>
-              <Link 
-                href="/quotes/new" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Add Quote
-              </Link>
-              <AuthButton />
-            </div>
+    <PageLayout>
+      {/* Hero Section */}
+      <div className="text-center py-20">
+        <div className="animate-scale-in">
+          <div className="flex items-center justify-center mb-8">
+            <div className="text-8xl">📚</div>
           </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-            <span className="block">QuotesDB</span>
+          
+          <h1 className="heading-1 mb-6 text-balance">
+            QuotesDB
           </h1>
-          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            Discover and share memorable quotes from your favorite movies and TV shows
+          
+          <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed">
+            Discover and share memorable quotes from your favorite movies and TV shows. 
+            Build your personal collection of cinema&apos;s most iconic moments.
           </p>
-          <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-            <div className="rounded-md shadow">
-              <Link
-                href="/quotes"
-                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
-              >
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-in">
+            <Link href="/quotes">
+              <Button size="lg" className="w-full sm:w-auto">
+                <span className="mr-2">💬</span>
                 Browse Quotes
-              </Link>
-            </div>
-            <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-              <Link
-                href="/movies/add"
-                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
-              >
+              </Button>
+            </Link>
+            
+            <Link href="/movies/add">
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                <span className="mr-2">🎬</span>
                 Import Movies
-              </Link>
-            </div>
+              </Button>
+            </Link>
           </div>
         </div>
+      </div>
 
-        <div className="mt-24">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">
-              Start Your Collection
-            </h2>
-            <p className="mt-4 text-lg text-gray-500">
-              Sign in to create your personal collection of memorable quotes
+      {/* Features Section */}
+      <div className="py-20 border-t border-border-light">
+        <div className="text-center mb-16">
+          <h2 className="heading-2 mb-4">Start Your Collection</h2>
+          <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+            Sign in to create your personal collection of memorable quotes and discover 
+            what makes each movie and TV show truly unforgettable.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8 mt-16">
+          <div className="text-center animate-in">
+            <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🎯</span>
+            </div>
+            <h3 className="heading-5 mb-2">Curated Collection</h3>
+            <p className="text-text-secondary">
+              Build your personal library of the most impactful quotes from cinema and television.
+            </p>
+          </div>
+          
+          <div className="text-center animate-in" style={{animationDelay: '0.1s'}}>
+            <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🌟</span>
+            </div>
+            <h3 className="heading-5 mb-2">Easy Discovery</h3>
+            <p className="text-text-secondary">
+              Search and explore quotes from thousands of movies and TV shows with detailed metadata.
+            </p>
+          </div>
+          
+          <div className="text-center animate-in" style={{animationDelay: '0.2s'}}>
+            <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">💡</span>
+            </div>
+            <h3 className="heading-5 mb-2">Share & Connect</h3>
+            <p className="text-text-secondary">
+              Connect with other film enthusiasts and share the quotes that resonate with you.
             </p>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   )
 }

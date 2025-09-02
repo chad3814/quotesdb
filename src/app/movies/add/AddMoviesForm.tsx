@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/Button"
 
 type ImportType = "movie" | "list"
 
@@ -86,13 +87,13 @@ export default function AddMoviesForm() {
     <div className="p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="error px-4 py-3 rounded-lg border animate-fade-in">
             {error}
           </div>
         )}
 
         {result && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="success px-4 py-3 rounded-lg border animate-fade-in">
             {isListResult(result) ? (
               <div>
                 <p className="font-semibold">{result.listName}</p>
@@ -132,38 +133,53 @@ export default function AddMoviesForm() {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="form-label flex items-center gap-2">
+            <span className="text-xl">🎛️</span>
             Import Type
           </label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <label className="flex items-center gap-3 p-4 border border-border-light rounded-lg cursor-pointer transition-colors hover:bg-surface-100 has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50">
               <input
                 type="radio"
                 value="movie"
                 checked={importType === "movie"}
                 onChange={(e) => setImportType(e.target.value as ImportType)}
-                className="mr-2"
+                className="w-4 h-4 text-primary-600"
                 disabled={loading}
               />
-              <span>Single Movie</span>
+              <div>
+                <div className="font-medium text-text-primary flex items-center gap-2">
+                  <span>🎬</span>
+                  Single Movie
+                </div>
+                <div className="text-sm text-text-secondary">Import one movie by TMDB ID</div>
+              </div>
             </label>
-            <label className="flex items-center">
+            
+            <label className="flex items-center gap-3 p-4 border border-border-light rounded-lg cursor-pointer transition-colors hover:bg-surface-100 has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50">
               <input
                 type="radio"
                 value="list"
                 checked={importType === "list"}
                 onChange={(e) => setImportType(e.target.value as ImportType)}
-                className="mr-2"
+                className="w-4 h-4 text-primary-600"
                 disabled={loading}
               />
-              <span>Movie List</span>
+              <div>
+                <div className="font-medium text-text-primary flex items-center gap-2">
+                  <span>📄</span>
+                  Movie List
+                </div>
+                <div className="text-sm text-text-secondary">Import multiple movies from a list</div>
+              </div>
             </label>
           </div>
         </div>
 
         {importType === "movie" ? (
           <div>
-            <label htmlFor="tmdbId" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="tmdbId" className="form-label flex items-center gap-2">
+              <span>🎬</span>
               TMDB Movie ID
             </label>
             <input
@@ -173,13 +189,14 @@ export default function AddMoviesForm() {
               onChange={(e) => setTmdbId(e.target.value)}
               placeholder="e.g., 550 (for Fight Club)"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="form-input"
               disabled={loading}
             />
           </div>
         ) : (
           <div>
-            <label htmlFor="listId" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="listId" className="form-label flex items-center gap-2">
+              <span>📄</span>
               TMDB List ID
             </label>
             <input
@@ -189,28 +206,31 @@ export default function AddMoviesForm() {
               onChange={(e) => setListId(e.target.value)}
               placeholder="e.g., 7060919"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="form-input"
               disabled={loading}
             />
           </div>
         )}
 
-        <div className="flex justify-end space-x-3">
-          <button
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-border-light">
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => router.back()}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+            className="order-2 sm:order-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          
+          <Button
             type="submit"
             disabled={loading || (importType === "movie" ? !tmdbId.trim() : !listId.trim())}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            loading={loading}
+            className="order-1 sm:order-2"
           >
             {loading ? "Importing..." : `Import ${importType === "movie" ? "Movie" : "List"}`}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
