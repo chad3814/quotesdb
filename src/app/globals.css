@@ -1,9 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer components {
-  .btn-test {
-    @apply px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600;
+/* Custom component classes using @apply */
+@layer utilities {
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors;
+  }
+  
+  .card {
+    @apply bg-white shadow rounded-lg p-6;
+  }
+  
+  .nav-link {
+    @apply text-gray-600 hover:text-gray-900 transition-colors;
   }
 }
